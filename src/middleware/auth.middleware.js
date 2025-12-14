@@ -1,5 +1,5 @@
 const jwt = require('jsonwebtoken');
-const JWT_SECRET = process.env.JWT_SECRET || 'my_super_secret_key_123';
+const JWT_SECRET_ADMIN = process.env.JWT_SECRET_ADMIN || 'my_super_secret_key_123';
 
 const protectAdmin = (req, res, next) => {
   // 1. Get token from header (Format: "Bearer <token>")
@@ -12,7 +12,7 @@ const protectAdmin = (req, res, next) => {
   try {
     // 2. Verify the token
     const token = authHeader.split(' ')[1];
-    const decoded = jwt.verify(token, JWT_SECRET);
+    const decoded = jwt.verify(token, JWT_SECRET_ADMIN);
 
     // 3. Add user info to request and Move on
     req.user = decoded; 

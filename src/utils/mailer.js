@@ -13,7 +13,7 @@ const {
 const transporter = nodemailer.createTransport({
   host: EMAIL_HOST,
   port: Number(EMAIL_PORT),
-  secure: EMAIL_SECURE === false,  // false for 587, true for 465
+  secure: EMAIL_SECURE,  // false for 587, true for 465
   auth: {
     user: EMAIL_USER,
     pass: EMAIL_PASS

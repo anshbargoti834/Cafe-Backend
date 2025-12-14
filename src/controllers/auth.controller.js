@@ -4,7 +4,7 @@ const jwt = require('jsonwebtoken');
 // In a real SaaS, these would be in a database.
 const ADMIN_USERNAME = process.env.ADMIN_USERNAME;
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
-const JWT_SECRET = process.env.JWT_SECRET;
+const JWT_SECRET_ADMIN = process.env.JWT_SECRET_ADMIN;
 
 exports.login = async (req, res) => {
   try {
@@ -20,7 +20,7 @@ exports.login = async (req, res) => {
 
     // 2. Generate Token (The "Badge")
     // Expires in 24 hours so they don't have to login constantly
-    const token = jwt.sign({ role: 'admin' }, JWT_SECRET, { expiresIn: '24h' });
+    const token = jwt.sign({ role: 'admin' }, JWT_SECRET_ADMIN, { expiresIn: '24h' });
 
     // 3. Send Token to Frontend
     res.status(200).json({
