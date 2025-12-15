@@ -1,27 +1,7 @@
-const multer = require("multer");
-const path = require("path");
+// src/middlewares/upload.js
+const multer = require('multer');
+const { storage } = require('../config/cloudinary'); // Import the file we made in Step 3
 
-// storage config
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, "uploads/"); // store in uploads folder
-  },
-  filename: function (req, file, cb) {
-    const unique = Date.now() + "-" + Math.round(Math.random() * 1e9);
-    cb(null, unique + path.extname(file.originalname));
-  }
-});
-
-const upload = multer({
-  storage,
-  limits: { fileSize: 2 * 1024 * 1024 }, // 2 MB
-  fileFilter(req, file, cb) {
-    const allowed = ["image/png", "image/jpg", "image/jpeg", "image/webp"];
-    if (!allowed.includes(file.mimetype)) {
-      return cb(new Error("Only images allowed"));
-    }
-    cb(null, true);
-  }
-});
+const upload = multer({ storage: storage });
 
 module.exports = upload;

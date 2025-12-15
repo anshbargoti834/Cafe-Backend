@@ -1,39 +1,36 @@
 const Menu = require('../models/Menu');
 const { successResponse, errorResponse } = require('../utils/response');
-const fs = require('fs');
-const path = require('path');
+// REMOVED: const fs = require('fs');
+// REMOVED: const path = require('path');
 
 exports.getAllMenu = async (req, res, next) => {
-try {
-const items = await Menu.find({}).sort({ category: 1, name: 1 });
-return successResponse(res, 200, { items });
-} catch (err) {
-next(err);
-}
+  try {
+    const items = await Menu.find({}).sort({ category: 1, name: 1 });
+    return successResponse(res, 200, { items });
+  } catch (err) {
+    next(err);
+  }
 };
 
-
 exports.getMenuByCategory = async (req, res, next) => {
-try {
-const { category } = req.params;
-const items = await Menu.find({ category }).sort({ name: 1 });
-return successResponse(res, 200, { items });
-} catch (err) {
-next(err);
-}
+  try {
+    const { category } = req.params;
+    const items = await Menu.find({ category }).sort({ name: 1 });
+    return successResponse(res, 200, { items });
+  } catch (err) {
+    next(err);
+  }
 };
 
 exports.createMenuItem = async (req, res, next) => {
   try {
-    // 1. Check for File Upload first
-    // 2. If no file, check if a URL string was sent in req.body.image
-    // 3. If neither, it remains null
     let finalImage = null;
 
+    // CHANGE: Cloudinary puts the Full URL in 'req.file.path'
     if (req.file) {
-      finalImage = `/uploads/${req.file.filename}`;
+      finalImage = req.file.path; 
     } else if (req.body.image) {
-      finalImage = req.body.image;
+      finalImage = req.body.image; // Fallback for manual URL string
     }
 
     const { name, description, price, category, isAvailable } = req.body;
@@ -43,7 +40,7 @@ exports.createMenuItem = async (req, res, next) => {
       description, 
       price, 
       category, 
-      image: finalImage, // Use the result of our logic above
+      image: finalImage, 
       isAvailable: !!isAvailable
     });
 
@@ -58,11 +55,17 @@ exports.updateMenuItem = async (req, res, next) => {
   try {
     const { id } = req.params;
     
-    // req.body contains the text fields AND the image path (thanks to normalizeImage middleware)
-    // We use { new: true } to return the updated document
+    // CHANGE: Handle image update logic manually to be safe
+    let updateData = { ...req.body };
+
+    // If a new file is uploaded, update the image field with the new Cloudinary URL
+    if (req.file) {
+      updateData.image = req.file.path;
+    }
+
     const updatedItem = await Menu.findByIdAndUpdate(
       id, 
-      req.body, 
+      updateData, 
       { new: true, runValidators: true }
     );
 
@@ -81,26 +84,17 @@ exports.deleteMenuItem = async (req, res, next) => {
   try {
     const { id } = req.params;
 
-    // 1. Find the item first (so we know the image path)
     const item = await Menu.findById(id);
 
     if (!item) {
       return errorResponse(res, 404, "Menu item not found");
     }
 
-    // 2. "Garbage Collection": Delete the image file from the server folder
-    if (item.image && !item.image.startsWith('http')) {
-      // Logic: Convert "/uploads/abc.jpg" -> "C:\Users\You\Project\uploads\abc.jpg"
-      const imagePath = path.join(__dirname, '..', '..', item.image);
-      
-      // Delete the file
-      fs.unlink(imagePath, (err) => {
-        if (err) console.error("Failed to delete local image:", err);
-        else console.log("Deleted local image:", imagePath);
-      });
-    }
+    // REMOVED: The "fs.unlink" block.
+    // Since images are now on Cloudinary, we don't delete them from the local disk.
+    // (Optional: You could add Cloudinary delete logic here later, but for the demo, simply removing the database record is enough.)
 
-    // 3. Now delete the database record
+    // Delete the database record
     await Menu.findByIdAndDelete(id);
 
     return successResponse(res, 200, { message: "Item deleted successfully" });
