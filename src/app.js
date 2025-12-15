@@ -22,6 +22,9 @@ const app = express();
 // Basic security
 app.disable('x-powered-by');
 app.use(helmet());
+app.get('/', (req, res) => {
+  res.send("I am awake!");
+});
 
 
 // Logging
