@@ -12,8 +12,8 @@ const {
 // Gmail SMTP over port 587 (STARTTLS)
 const transporter = nodemailer.createTransport({
   host: EMAIL_HOST,
-  port: 587,
-  secure: false,  // false for 587, true for 465
+  port: 465,
+  secure: true,  // false for 587, true for 465
   auth: {
     user: EMAIL_USER,
     pass: EMAIL_PASS

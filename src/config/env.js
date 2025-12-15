@@ -24,12 +24,12 @@ module.exports = {
 
   EMAIL_HOST: process.env.EMAIL_HOST,
   // UPDATE 2: Port must be an integer for some libraries
-  EMAIL_PORT: parseInt(process.env.EMAIL_PORT || '587', 10),
+  EMAIL_PORT: parseInt(process.env.EMAIL_PORT || '465', 10),
   
   // UPDATE 3: CRITICAL FIX! 
   // In .env, "false" is a string, which counts as true in JavaScript.
   // This forces it to be a real boolean.
-  EMAIL_SECURE: process.env.EMAIL_SECURE === 'true', 
+  EMAIL_SECURE: process.env.EMAIL_SECURE === 'false', 
   
   EMAIL_USER: process.env.EMAIL_USER,
   EMAIL_PASS: process.env.EMAIL_PASS,

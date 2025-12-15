@@ -54,48 +54,56 @@ exports.createReservation = async (req, res, next) => {
 
     const reservation = await Reservation.create({ name, phone, email, numberOfGuests, date, timeSlot, specialNote });
 
-    // Send emails (do not block response too long — but await so errors can be logged)
-    try {
-      // User confirmation email (if provided)
-      if (email) {
-        const userSubject = `Reservation confirmed — ${date} ${timeSlot}`;
-        const userHtml = `
-          <p>Hi ${name},</p>
-          <p>Thank you for reserving a table at <strong>Our Cafe</strong>.</p>
-          <p><strong>Reservation details</strong><br/>
-          Date: ${date}<br/>
-          Time: ${timeSlot}<br/>
-          Guests: ${numberOfGuests}<br/>
-          ${specialNote ? `Note: ${specialNote}<br/>` : ''}
-          </p>
-          <p>We look forward to serving you!</p>
-          <p>— Cafe Team</p>
-        `;
-        await sendMail({ to: email, subject: userSubject, html: userHtml });
-      }
+    // ---------------------------------------------------------
+    // CHANGE: Send Success Response IMMEDIATELY
+    // ---------------------------------------------------------
+    successResponse(res, 201, { reservation });
 
-      // Admin notification
-      if (ADMIN_EMAIL) {
-        const adminSubject = `New reservation: ${name} — ${date} ${timeSlot}`;
-        const adminHtml = `
-          <p>New reservation received</p>
-          <p><strong>Customer:</strong> ${name} (${phone})${email ? ` — ${email}` : ''}</p>
-          <p><strong>Details</strong><br/>
-          Date: ${date}<br/>
-          Time: ${timeSlot}<br/>
-          Guests: ${numberOfGuests}<br/>
-          ${specialNote ? `Note: ${specialNote}<br/>` : ''}
-          </p>
-          <p>Reservation ID: ${reservation._id}</p>
-        `;
-        await sendMail({ to: ADMIN_EMAIL, subject: adminSubject, html: adminHtml });
-      }
-    } catch (mailErr) {
-      // Log mail errors but still return success to client
-      logger.error('Failed to send reservation emails: ' + (mailErr && mailErr.message ? mailErr.message : mailErr));
-    }
+    // ---------------------------------------------------------
+    // CHANGE: Send Emails in Background (Fire and Forget)
+    // ---------------------------------------------------------
+    (async () => {
+        try {
+        // User confirmation email (if provided)
+        if (email) {
+            const userSubject = `Reservation confirmed — ${date} ${timeSlot}`;
+            const userHtml = `
+            <p>Hi ${name},</p>
+            <p>Thank you for reserving a table at <strong>Our Cafe</strong>.</p>
+            <p><strong>Reservation details</strong><br/>
+            Date: ${date}<br/>
+            Time: ${timeSlot}<br/>
+            Guests: ${numberOfGuests}<br/>
+            ${specialNote ? `Note: ${specialNote}<br/>` : ''}
+            </p>
+            <p>We look forward to serving you!</p>
+            <p>— Cafe Team</p>
+            `;
+            await sendMail({ to: email, subject: userSubject, html: userHtml });
+        }
 
-    return successResponse(res, 201, { reservation });
+        // Admin notification
+        if (ADMIN_EMAIL) {
+            const adminSubject = `New reservation: ${name} — ${date} ${timeSlot}`;
+            const adminHtml = `
+            <p>New reservation received</p>
+            <p><strong>Customer:</strong> ${name} (${phone})${email ? ` — ${email}` : ''}</p>
+            <p><strong>Details</strong><br/>
+            Date: ${date}<br/>
+            Time: ${timeSlot}<br/>
+            Guests: ${numberOfGuests}<br/>
+            ${specialNote ? `Note: ${specialNote}<br/>` : ''}
+            </p>
+            <p>Reservation ID: ${reservation._id}</p>
+            `;
+            await sendMail({ to: ADMIN_EMAIL, subject: adminSubject, html: adminHtml });
+        }
+        } catch (mailErr) {
+            // Log mail errors silently
+            logger.error('Failed to send reservation emails: ' + (mailErr && mailErr.message ? mailErr.message : mailErr));
+        }
+    })();
+
   } catch (err) {
     next(err);
   }
